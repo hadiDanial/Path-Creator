@@ -4,43 +4,70 @@ using UnityEngine;
 using PathCreation;
 using PathCreation.Examples;
 using UnityEngine.U2D;
-
+using System;
 
 /// <summary>
-/// Path generator that generates a path procedurally and creates a sprite shape that matches it.
+/// Path generator that generates a path procedurally.
 /// </summary>
 
 [RequireComponent(typeof(PathCreator))]
-[RequireComponent(typeof(SpriteShapeController))]
-[RequireComponent(typeof(PathCollider))]
 public class PathGenerator : MonoBehaviour
-{
-    public float minDistance = 5f, maxDistance = 20f;
-    public float minHeight = 2f, maxHeight = 10f;
+    {
+    [Header("Spawn Settings")]
+    [Range(0.5f, 5f), Tooltip("Amount of time between spawns")]
+    public float timeBetweenSpawns = 2f;
+    [Range(0, 20), Tooltip("Number of points to spawn each time")]
+    public int numPointsToSpawn = 4;
+    [SerializeField, Tooltip("Spawn more points?")]
+    private bool spawn = true;
 
-    [Range(0.5f,5f)]
-    public float timeBetweenSpawns = 0.5f;
-    [Range(0, 20)]
-    public int pointsBeforeRebuild = 10;
-    public PathCreator pathCreator;
-    public SpriteShapeController spriteShape;
+    [Header("Generation Settings")]
+    public Vector3 minDistance = new Vector3(5, 2, 5);
+    public Vector3 maxDistance = new Vector3(20, 10, 20);
+    [Tooltip("Use z-axis")]
+    public bool is3D = false;
+    [Tooltip("Multiplies y-value with a sign that changes between positive and negative 1.")]
+    public bool alternateY = true;
+    [Tooltip("Number of points to generate when the script first starts.")]
+    [Range(0, 50)]
+    public int startPointsNum = 10;
+    [Tooltip("Custom positions to add to the start of the path. If empty, doesn't generate any predefined points.")]
+    public Transform[] startPoints;
+
+    [Header("Spiral Path")]
+    [Tooltip("If on, generates a spiral, sets is3D to true, and alternateY to false.")]
+    public bool isSpiral;
+    [Tooltip("Width, Height and Depth of the spiral.")]
+    public Vector3 spiralLength = Vector3.one * 50;
+    [Tooltip("Point the spiral revolves around.")]
+    public Vector3 spiralOrigin = Vector3.zero;
+    [Tooltip("The axis the spiral is generated on.")]
+    public SpiralDirection spiralDir = SpiralDirection.Y;
+    [Tooltip("Add the spiral variation?")]
+    public bool useSpiralVariation = true;
+    [Tooltip("How much to add to the spiral in each axis.")]
+    public Vector3 spiralVariation;
+    [Tooltip("Should the spiral go clockwise or anti-clockwise?")]
+    public bool clockwiseSpiral = true;
+
+    [Header("Collider")]
+    public bool generateCollider = true;
+    public PhysicsMaterial2D physicsMaterial2D;
     private PathCollider pathCollider;
 
+    [Header("Path")]
+    public PathCreator pathCreator;
+    public List<Vector3> pathPoints;
 
-    public PhysicsMaterial2D physicsMaterial2D;
-    public Material material;
-
-    private Vector3 lastVert;
-
-    public List<Vector2> pathPoints;
     private Vector2 lastPoint;
-    [SerializeField]
-    private bool spawn = true;
     private int sign = 1;
-    private int lastIndex = 0;
-    private int lastSegmentIndex = 0;
+    private PathSpace space;
+
+    private float spiralX, spiralY, spiralZ;
+
     void Start()
         {
+        SetPathCollider();
         SetPathCreator();
         StartCoroutine(IGeneratePath());
         }
@@ -49,7 +76,7 @@ public class PathGenerator : MonoBehaviour
         if (Input.GetMouseButtonDown(2))
             {
             spawn = !spawn;
-            if(spawn)
+            if (spawn)
                 StartCoroutine(IGeneratePath());
             }
         }
@@ -58,58 +85,227 @@ public class PathGenerator : MonoBehaviour
         WaitForSeconds wait = new WaitForSeconds(timeBetweenSpawns);
         while (spawn)
             {
-            for (int i = 0; i < pointsBeforeRebuild; i++)
+            for (int i = 0; i < numPointsToSpawn; i++)
                 {
-                GenerateRandomPoint();
+                if (isSpiral)
+                    {
+                    GenerateSpiralPoint();
+                    }
+                else
+                    {
+                    GenerateRandomPoint();
+                    }
                 }
             yield return wait;
             RebuildPath();
             }
         }
 
+    private void GenerateSpiralPoint()
+        {
+        Vector3[] cyclePoints = new Vector3[4];
+        float axisVal;
+        float xAddition, yAddition, zAddition;
+
+        if (useSpiralVariation)
+            {
+            xAddition = spiralVariation.x;
+            yAddition = spiralVariation.y;
+            zAddition = spiralVariation.z;
+            }
+        else
+            {
+            xAddition = 0;
+            yAddition = 0;
+            zAddition = 0;
+            }
+        switch (spiralDir) // AXIS
+            {
+            case SpiralDirection.X:
+                    {
+                    axisVal = spiralLength.x / 4;
+                    if (useSpiralVariation) spiralY += yAddition;
+                    cyclePoints[0] = new Vector3(axisVal + spiralX, spiralOrigin.y + (spiralY + yAddition), spiralOrigin.z);
+                    if (useSpiralVariation) spiralZ += zAddition;
+                    cyclePoints[1] = new Vector3((axisVal * 2) + spiralX, spiralOrigin.y, spiralOrigin.z + (spiralZ + zAddition));
+                    if (useSpiralVariation) spiralY += yAddition;
+                    cyclePoints[2] = new Vector3((axisVal * 3) + spiralX, spiralOrigin.y + (-spiralY - yAddition), spiralOrigin.z);
+                    if (useSpiralVariation) spiralZ += zAddition;
+                    cyclePoints[3] = new Vector3((axisVal * 4) + spiralX, spiralOrigin.y, spiralOrigin.z + (-spiralZ - zAddition));
+                    spiralX += spiralLength.x;
+                    }
+                break;
+            case SpiralDirection.Y:
+                    {
+                    axisVal = spiralLength.y / 4;
+                    if (useSpiralVariation) spiralX += xAddition;
+                    cyclePoints[0] = new Vector3(spiralOrigin.x + (spiralX + xAddition), axisVal + spiralY, spiralOrigin.z);
+                    if (useSpiralVariation) spiralZ += zAddition;
+                    cyclePoints[1] = new Vector3(spiralOrigin.x, (axisVal * 2) + spiralY, spiralOrigin.z + (spiralZ + zAddition));
+                    if (useSpiralVariation) spiralX += xAddition;
+                    cyclePoints[2] = new Vector3(spiralOrigin.x + (-spiralX - xAddition), (axisVal * 3) + spiralY, spiralOrigin.z);
+                    if (useSpiralVariation) spiralZ += zAddition;
+                    cyclePoints[3] = new Vector3(spiralOrigin.x, (axisVal * 4) + spiralY, spiralOrigin.z + (-spiralZ - zAddition));
+                    spiralY += spiralLength.y;
+                    }
+                break;
+            case SpiralDirection.Z:
+                    {
+                    axisVal = spiralLength.z / 4;
+                    if (useSpiralVariation) spiralX += xAddition;
+                    cyclePoints[0] = new Vector3(spiralOrigin.x + (spiralX + xAddition), spiralOrigin.y, axisVal + spiralZ);
+                    if (useSpiralVariation) spiralY += yAddition;
+                    cyclePoints[1] = new Vector3(spiralOrigin.x, spiralOrigin.y + (spiralY + yAddition), (axisVal * 2) + spiralZ);
+                    if (useSpiralVariation) spiralX += xAddition;
+                    cyclePoints[2] = new Vector3(spiralOrigin.x + (-spiralX - xAddition), spiralOrigin.y, (axisVal * 3) + spiralZ);
+                    if (useSpiralVariation) spiralY += yAddition;
+                    cyclePoints[3] = new Vector3(spiralOrigin.x, spiralOrigin.y + (-spiralY - yAddition), (axisVal * 4) + spiralZ);
+                    spiralZ += spiralLength.z;
+                    }
+                break;
+            default:
+                break;
+            }
+
+        if (clockwiseSpiral)
+            {
+            pathPoints.Add(cyclePoints[0]);
+            pathPoints.Add(cyclePoints[1]);
+            pathPoints.Add(cyclePoints[2]);
+            pathPoints.Add(cyclePoints[3]);
+            lastPoint = cyclePoints[3];
+            }
+        else
+            {
+            switch (spiralDir)
+                {
+                case SpiralDirection.X:
+                        {
+                        float temp = cyclePoints[0].y;
+                        cyclePoints[0] = new Vector3(cyclePoints[0].x, cyclePoints[2].y, cyclePoints[0].z);
+                        cyclePoints[2] = new Vector3(cyclePoints[2].x, temp, cyclePoints[2].z);
+                        }
+                    break;
+                case SpiralDirection.Y:
+                        {
+                        float temp = cyclePoints[0].x;
+                        cyclePoints[0] = new Vector3(cyclePoints[2].x, cyclePoints[0].y, cyclePoints[0].z);
+                        cyclePoints[2] = new Vector3(temp, cyclePoints[2].y, cyclePoints[2].z);
+                        }
+                    break;
+                case SpiralDirection.Z:
+                        {
+                        float temp = cyclePoints[0].x;
+                        cyclePoints[0] = new Vector3(cyclePoints[2].x, cyclePoints[0].y, cyclePoints[0].z);
+                        cyclePoints[2] = new Vector3(temp, cyclePoints[2].y, cyclePoints[2].z);
+                        }
+                    break;
+                default:
+                    break;
+                }
+            pathPoints.Add(cyclePoints[0]);
+            pathPoints.Add(cyclePoints[1]);
+            pathPoints.Add(cyclePoints[2]);
+            pathPoints.Add(cyclePoints[3]);
+            lastPoint = cyclePoints[3];
+            }
+
+        RebuildPath();
+        }
+
     private void GenerateRandomPoint()
         {
-        float x = Random.Range(minDistance, maxDistance);
-        float y = Random.Range(minHeight, maxHeight) * sign;
-        sign *= -1;
-        Vector2 newPoint = new Vector2(x, y) + lastPoint;
-        pathPoints.Add(newPoint);
-        lastPoint = newPoint;
+        float x = UnityEngine.Random.Range(minDistance.x, maxDistance.x);
+        float y = UnityEngine.Random.Range(minDistance.y, maxDistance.y);
+        float z;
+        if (alternateY)
+            {
+            y *= sign;
+            sign *= -1;
+            }
+        if (is3D)
+            {
+            z = UnityEngine.Random.Range(minDistance.z, maxDistance.z);
+            Vector3 newPoint = new Vector3(x, y, z) + (Vector3)lastPoint;
+            pathPoints.Add(newPoint);
+            lastPoint = newPoint;
+            }
+        else
+            {
+            Vector2 newPoint = new Vector2(x, y) + lastPoint;
+            pathPoints.Add(newPoint);
+            lastPoint = newPoint;
+            }
+
         }
 
     private void RebuildPath()
         {
-        pathCreator.bezierPath = new BezierPath(pathPoints, false, PathSpace.xy);
+        space = is3D ? PathSpace.xyz : PathSpace.xy;
+        pathCreator.bezierPath = new BezierPath(pathPoints, false, space);
         pathCreator.bezierPath.ControlPointMode = BezierPath.ControlMode.Mirrored;
-        lastSegmentIndex = PathToSpriteShape.UpdateSpriteShape(spriteShape, pathCreator, lastSegmentIndex);
         SetPathCollider();
         }
 
     private void SetPathCreator()
         {
         pathCreator = GetComponent<PathCreator>();
-        pathPoints = new List<Vector2>();
-
-        pathPoints.Add(-Vector2.right * 10 + Vector2.up * 3);
-        pathPoints.Add(Vector2.zero + Vector2.right * 0.5f);
-
-        for (int i = 0; i < 10; i++)
+        pathPoints = new List<Vector3>();
+        if (startPoints != null && startPoints.Length > 0)
             {
-            GenerateRandomPoint();
+            for (int i = 0; i < startPoints.Length; i++)
+                {
+                if (startPoints[i] != null)
+                    {
+                    pathPoints.Add(startPoints[i].position);
+                    lastPoint = startPoints[i].position;
+                    }
+                }
+            }
+        if (isSpiral)
+            {
+            pathPoints.Add(spiralOrigin); // Starting point for the spiral.
+            space = PathSpace.xyz;
+            alternateY = false;
+            is3D = true;
+            spiralX = spiralLength.x;
+            spiralY = spiralLength.y;
+            spiralZ = spiralLength.z;
+            GenerateSpiralPoint();
+            }
+        else
+            {
+            space = is3D ? PathSpace.xyz : PathSpace.xy;
+            pathCreator.bezierPath.Space = space;
+
+            for (int i = 0; i < startPointsNum; i++)
+                {
+                GenerateRandomPoint();
+                }
+            lastPoint = pathPoints[pathPoints.Count - 1];
             }
 
-        lastPoint = pathPoints[pathPoints.Count - 1];
+
         pathCreator.bezierPath.ControlPointMode = BezierPath.ControlMode.Mirrored;
-        pathCreator.bezierPath = new BezierPath(pathPoints, false, PathSpace.xy);
-        lastSegmentIndex = PathToSpriteShape.UpdateSpriteShape(spriteShape, pathCreator, lastSegmentIndex);
-        lastIndex = spriteShape.spline.GetPointCount();
-        SetPathCollider();
+        pathCreator.bezierPath = new BezierPath(pathPoints, false, space);
+        if (generateCollider && pathCollider != null) pathCollider.GenerateCollider();
         }
 
     private void SetPathCollider()
         {
-        pathCollider = GetComponent<PathCollider>();
-        pathCollider.SetPhysicsMaterial(physicsMaterial2D);
-        pathCollider.GenerateCollider();
+        if (generateCollider)
+            {
+            pathCollider = GetComponent<PathCollider>();
+            if (pathCollider == null)
+                pathCollider = gameObject.AddComponent<PathCollider>();
+            if (physicsMaterial2D != null)
+                pathCollider.SetPhysicsMaterial(physicsMaterial2D);
+            }
+        else return;
         }
-}
+    }
+
+public enum SpiralDirection
+    {
+    X, Y, Z
+    }
