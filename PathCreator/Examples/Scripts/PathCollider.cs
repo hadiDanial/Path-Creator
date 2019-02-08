@@ -33,7 +33,7 @@ public class PathCollider : MonoBehaviour
             }
         }
 
-    public void SetPhysicsMaterial(PhysicsMaterial2D mat)
+    public void SetPhysicsMaterial2D(PhysicsMaterial2D mat)
         {
         if (mat != null)
             physicsMat = mat;
