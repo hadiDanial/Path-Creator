@@ -9,8 +9,6 @@ using PathCreation;
 public class SpiralGenerator : PathGenerator
     {
     [Header("Spiral Path")]
-    [Tooltip("If on, generates a spiral, sets is3D to true, and alternateY to false.")]
-    public bool isSpiral;
     [Tooltip("Width, Height and Depth of the spiral.")]
     public Vector3 spiralLength = Vector3.one * 50;
     [Tooltip("Point the spiral revolves around.")]

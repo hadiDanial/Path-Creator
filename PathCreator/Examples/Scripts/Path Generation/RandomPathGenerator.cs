@@ -31,12 +31,13 @@ public class RandomPathGenerator : PathGenerator
         }
     protected override void BuildPath()
         {
+        pathPoints.Clear();
         space = is3D ? PathSpace.xyz : PathSpace.xy;
         pathCreator.bezierPath.Space = space;
 
         for (int i = 0; i < startPointsNum; i++)
             {
-            GeneratePoint();
+            GenerateRandomPoint();
             }
         lastPoint = pathPoints[pathPoints.Count - 1];
         base.BuildPath();
@@ -76,13 +77,11 @@ public class RandomPathGenerator : PathGenerator
                 z = UnityEngine.Random.Range(minDistance.z, maxDistance.z);
                 Vector3 newPoint = new Vector3(x, y, z) + (Vector3)lastPoint;
                 pathPoints.Add(newPoint);
-                lastPoint = newPoint;
                 }
             else
                 {
                 Vector2 newPoint = new Vector2(x, y) + (Vector2)lastPoint;
                 pathPoints.Add(newPoint);
-                lastPoint = newPoint;
                 }
 
             RebuildPath();
@@ -94,10 +93,31 @@ public class RandomPathGenerator : PathGenerator
         }
 
     /// <summary>
+    /// Removes a number of points from the start of the path and generates new ones in their place, IF removePointsOnReachLimit is true.
+    /// </summary>
+    /// <param name="numToRemove">The number of points to remove. Defaults to 1.</param>
+    protected override void RemovePointsAndGenerate(int numToRemove = 1)
+        {
+        if (removePointsOnReachLimit)
+            {
+            for (int i = 0; i < numToRemove; i++)
+                {
+                pathPoints.RemoveAt(0);
+                pathCreator.bezierPath.DeleteSegment(0);
+                GenerateRandomPoint();
+                }
+            }
+        else
+            {
+            Debug.LogWarning(gameObject.name + ": Cannot generate more points. Limit reached, point removal disabled.");
+            }
+        }
+    /// <summary>
     /// Rebuilds the path with the newly generated points.
     /// </summary>
     protected override void RebuildPath()
         {
+        lastPoint = pathPoints[pathPoints.Count - 1];
         space = is3D ? PathSpace.xyz : PathSpace.xy;
         pathCreator.bezierPath.AddSegmentToEnd(lastPoint);
         //pathPoints.Add(lastPoint);

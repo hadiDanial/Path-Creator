@@ -65,6 +65,7 @@ public abstract class PathGenerator : MonoBehaviour
     public virtual void InitializeGenerator()
         {
         SetPathCollider();
+        lastPoint = transform.position;
         pathCreator = GetComponent<PathCreator>();
         pathPoints = new List<Vector3>();
         BuildPath();
