@@ -11,18 +11,18 @@ using System;
 [RequireComponent(typeof(PathCreator))]
 public abstract class PathGenerator : MonoBehaviour
     {
-    [Header("Limits")]
+    //[Header("Limits")]
     [SerializeField, Tooltip("Limit maximum number of points?")]
-    protected bool limitPointsNum = true;
+    protected bool limitPoints = true;
     [Range(10, 1000), Tooltip("Maximum number of points to generate, if limitPointsNum is on.")]
     public int maxPointsNum = 250;
     [SerializeField, Tooltip("Remove points from the start of the path when the limit is reached?")]
     protected bool removePointsOnReachLimit = true;
 
-    [Header("Settings")]
+    //[Header("Settings")]
     [Tooltip("Generate more than one point at a time?")]
     public bool generateMultiplePoints = true;
-    [Tooltip("Number of points to add in GeneratePoint"), Range(1, 100)]
+    [Tooltip("Number of points to add if generateMultiplePoints is on"), Range(1, 100)]
     public int pointsToAdd = 5;
     [Tooltip("Use z-axis")]
     public bool is3D = false;
@@ -32,20 +32,20 @@ public abstract class PathGenerator : MonoBehaviour
     [Tooltip("Custom positions to add to the start of the path. If empty, doesn't generate any predefined points.")]
     public Transform[] startPoints;
 
-    [Header("Generation Over Time")] // In the IGeneratePath coroutine
+    //[Header("Generation Over Time")] // In the IGeneratePath coroutine
     [SerializeField, Tooltip("Generate more points over time?")]
-    protected bool generateOverTime = false;
+    public bool generateOverTime = false;
     [Range(0.5f, 5f), Tooltip("Amount of time between generations")]
     public float timeBetweenGenerations = 2f;
     [Range(0, 20), Tooltip("Number of points to generate each time")]
     public int numPointsToGenerateT = 4;
 
-    [Header("Collider")]
-    public bool generate2DCollider = true;
+    //[Header("Collider")]
+    public bool generate2DCollider = false;
     public PhysicsMaterial2D physicsMaterial2D;
     private PathCollider pathCollider;
 
-    [Header("Path")]
+    //[Header("Path")]
     public PathCreator pathCreator;
     public List<Vector3> pathPoints;
 
@@ -148,7 +148,7 @@ public abstract class PathGenerator : MonoBehaviour
     /// <param name="numToAdd">Number of points to add. Defaults to 1.</param>
     protected virtual bool CanAddPoints(int numToAdd = 1)
         {
-        if (limitPointsNum)
+        if (limitPoints)
             {
             return (pathPoints.Count + numToAdd) <= maxPointsNum;
             }

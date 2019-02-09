@@ -8,16 +8,16 @@ using PathCreation;
 /// </summary>
 public class SpiralGenerator : PathGenerator
     {
-    [Header("Spiral Path")]
+    //[Header("Spiral Path")]
     [Tooltip("Width, Height and Depth of the spiral.")]
     public Vector3 spiralLength = Vector3.one * 50;
     [Tooltip("Point the spiral revolves around.")]
     public Vector3 spiralOrigin = Vector3.zero;
     [Tooltip("The axis the spiral is generated on.")]
-    public SpiralDirection spiralDir = SpiralDirection.Y;
+    public PathAxis spiralDir = PathAxis.Y;
     [Tooltip("Add the spiral variation?")]
     public bool useSpiralVariation = true;
-    [Tooltip("How much to add to the spiral in each axis in each cycle.")]
+    [Tooltip("How much to add to the spiral on each axis in each cycle.")]
     public Vector3 spiralVariation;
     [Tooltip("Should the spiral go clockwise or anti-clockwise?")]
     public bool clockwiseSpiral = true;
@@ -77,7 +77,7 @@ public class SpiralGenerator : PathGenerator
                 }
             switch (spiralDir) // AXIS
                 {
-                case SpiralDirection.X:
+                case PathAxis.X:
                         {
                         axisVal = spiralLength.x / 4;
                         if (useSpiralVariation) spiralY += yAddition;
@@ -91,7 +91,7 @@ public class SpiralGenerator : PathGenerator
                         spiralX += spiralLength.x;
                         }
                     break;
-                case SpiralDirection.Y:
+                case PathAxis.Y:
                         {
                         axisVal = spiralLength.y / 4;
                         if (useSpiralVariation) spiralX += xAddition;
@@ -105,7 +105,7 @@ public class SpiralGenerator : PathGenerator
                         spiralY += spiralLength.y;
                         }
                     break;
-                case SpiralDirection.Z:
+                case PathAxis.Z:
                         {
                         axisVal = spiralLength.z / 4;
                         if (useSpiralVariation) spiralX += xAddition;
@@ -120,7 +120,10 @@ public class SpiralGenerator : PathGenerator
                         }
                     break;
                 default:
-                    break;
+                        {
+                        Debug.LogWarning("ERROR! "+ gameObject.name + ": Spiral Direction: Not implemented yet. Please use X, Y, or Z.");
+                        return;
+                        }
                 }
 
             if (clockwiseSpiral)
@@ -135,21 +138,21 @@ public class SpiralGenerator : PathGenerator
                 {
                 switch (spiralDir)
                     {
-                    case SpiralDirection.X:
+                    case PathAxis.X:
                             {
                             float temp = cyclePoints[0].y;
                             cyclePoints[0] = new Vector3(cyclePoints[0].x, cyclePoints[2].y, cyclePoints[0].z);
                             cyclePoints[2] = new Vector3(cyclePoints[2].x, temp, cyclePoints[2].z);
                             }
                         break;
-                    case SpiralDirection.Y:
+                    case PathAxis.Y:
                             {
                             float temp = cyclePoints[0].x;
                             cyclePoints[0] = new Vector3(cyclePoints[2].x, cyclePoints[0].y, cyclePoints[0].z);
                             cyclePoints[2] = new Vector3(temp, cyclePoints[2].y, cyclePoints[2].z);
                             }
                         break;
-                    case SpiralDirection.Z:
+                    case PathAxis.Z:
                             {
                             float temp = cyclePoints[0].x;
                             cyclePoints[0] = new Vector3(cyclePoints[2].x, cyclePoints[0].y, cyclePoints[0].z);
@@ -237,7 +240,7 @@ public class SpiralGenerator : PathGenerator
     /// <param name="numToAdd">Number of points to add. Defaults to 4.</param>
     protected override bool CanAddPoints(int numToAdd = 4)
         {
-        if (limitPointsNum)
+        if (limitPoints)
             {
             return (pathPoints.Count + numToAdd) <= maxPointsNum;
             }
@@ -246,8 +249,4 @@ public class SpiralGenerator : PathGenerator
             return true;
             }
         }
-    }
-public enum SpiralDirection
-    {
-    X, Y, Z, Custom
     }

@@ -8,7 +8,7 @@ using PathCreation;
 /// </summary>
 public class RandomPathGenerator : PathGenerator
 {
-    [Header("Generation Settings")]
+    //[Header("Generation Settings")]
     public Vector3 minDistance = new Vector3(5, 2, 5);
     public Vector3 maxDistance = new Vector3(20, 10, 20);
     [Tooltip("Multiplies y-value with a sign that changes between positive and negative 1.")]
