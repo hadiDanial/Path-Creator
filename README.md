@@ -3,7 +3,9 @@
 This fork started with me trying to use this asset in a game project, and ended up with me just adding things for the hell of it. It's pretty fun, and bound to be very useful!
 
 Additions to the main repo:
+
 Path generators, with custom inspectors
+
 Path to sprite shape conversion (will be readded soon)
 
 
