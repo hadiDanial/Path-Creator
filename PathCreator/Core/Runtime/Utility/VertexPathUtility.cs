@@ -65,6 +65,10 @@ namespace PathCreation.Utility
                     prevPointOnPath = pointOnPath;
                     }
                 splitData.anchorVertexMap.Add(splitData.vertices.Count - 1);
+                ///////
+                splitData.anchorTangents.Add(CubicBezierUtility.EvaluateCurveDerivative(segmentPoints, 0));
+                splitData.anchorTangents.Add(CubicBezierUtility.EvaluateCurveDerivative(segmentPoints, 1));
+                ///////
                 }
             return splitData;
             }
@@ -136,6 +140,7 @@ namespace PathCreation.Utility
             public List<float> cumulativeLength = new List<float>();
             public List<int> anchorVertexMap = new List<int>();
             public MinMax3D minMax = new MinMax3D();
+            public List<Vector3> anchorTangents = new List<Vector3>();
             }
         }
     }

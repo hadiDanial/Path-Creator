@@ -21,7 +21,7 @@ namespace PathCreation
         public readonly Vector3[] vertices;
         public readonly Vector3[] tangents;
         public readonly Vector3[] normals;
-
+        public readonly Vector3[] anchorTangents;
         /// Percentage along the path at each vertex (0 being start of path, and 1 being the end)
         public readonly float[] times;
         /// Total distance between the vertices of the polyline
@@ -70,7 +70,7 @@ namespace PathCreation
             cumulativeLengthAtEachVertex = new float[numVerts];
             times = new float[numVerts];
             bounds = new Bounds((pathSplitData.minMax.Min + pathSplitData.minMax.Max) / 2, pathSplitData.minMax.Max - pathSplitData.minMax.Min);
-
+            anchorTangents = pathSplitData.anchorTangents.ToArray();
             // Figure out up direction for path
             up = (bounds.size.z > bounds.size.y) ? Vector3.up : -Vector3.forward;
             Vector3 lastRotationAxis = up;
@@ -253,23 +253,11 @@ namespace PathCreation
             return Mathf.Lerp(cumulativeLengthAtEachVertex[data.previousIndex], cumulativeLengthAtEachVertex[data.nextIndex], data.percentBetweenIndices);
             }
 
-         /// Finds the closest point on the path from any point in the world
-        public Vector3 GetClosestPointOnPath (Vector3 worldPoint) {
-            TimeOnPathData data = CalculateClosestPointOnPathData (worldPoint);
-            return Vector3.Lerp (vertices[data.previousIndex], vertices[data.nextIndex], data.percentBetweenIndices);
-        }
+        public float GetUniformSpeed(float speed)
+            {
+            return (1 / length) * speed;
+            }
 
-        /// Finds the 'time' (0=start of path, 1=end of path) along the path that is closest to the given point
-        public float GetClosestTimeOnPath (Vector3 worldPoint) {
-            TimeOnPathData data = CalculateClosestPointOnPathData (worldPoint);
-            return Mathf.Lerp (times[data.previousIndex], times[data.nextIndex], data.percentBetweenIndices);
-        }
-
-        /// Finds the distance along the path that is closest to the given point
-        public float GetClosestDistanceAlongPath (Vector3 worldPoint) {
-            TimeOnPathData data = CalculateClosestPointOnPathData (worldPoint);
-            return Mathf.Lerp (cumulativeLengthAtEachVertex[data.previousIndex], cumulativeLengthAtEachVertex[data.nextIndex], data.percentBetweenIndices);
-        }
 
         #endregion
 
