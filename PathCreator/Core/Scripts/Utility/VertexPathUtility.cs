@@ -2,19 +2,19 @@
 using UnityEngine;
 
 namespace PathCreation.Utility
-{
-    public static class VertexPathUtility
     {
-
-		public static PathSplitData SplitBezierPathByAngleError(BezierPath bezierPath, float maxAngleError, float minVertexDst, float accuracy)
+    public static class VertexPathUtility
         {
-			PathSplitData splitData = new PathSplitData();
+
+        public static PathSplitData SplitBezierPathByAngleError(BezierPath bezierPath, float maxAngleError, float minVertexDst, float accuracy)
+            {
+            PathSplitData splitData = new PathSplitData();
 
             splitData.vertices.Add(bezierPath[0]);
             splitData.tangents.Add(CubicBezierUtility.EvaluateCurveDerivative(bezierPath.GetPointsInSegment(0), 0).normalized);
             splitData.cumulativeLength.Add(0);
             splitData.anchorVertexMap.Add(0);
-			splitData.minMax.AddValue(bezierPath[0]);
+            splitData.minMax.AddValue(bezierPath[0]);
 
             Vector3 prevPointOnPath = bezierPath[0];
             Vector3 lastAddedPoint = bezierPath[0];
@@ -24,18 +24,19 @@ namespace PathCreation.Utility
 
             // Go through all segments and split up into vertices
             for (int segmentIndex = 0; segmentIndex < bezierPath.NumSegments; segmentIndex++)
-            {
+                {
                 Vector3[] segmentPoints = bezierPath.GetPointsInSegment(segmentIndex);
                 float estimatedSegmentLength = CubicBezierUtility.EstimateCurveLength(segmentPoints[0], segmentPoints[1], segmentPoints[2], segmentPoints[3]);
                 int divisions = Mathf.CeilToInt(estimatedSegmentLength * accuracy);
                 float increment = 1f / divisions;
+
                 for (float t = increment; t <= 1; t += increment)
-                {
+                    {
                     bool isLastPointOnPath = (t + increment > 1 && segmentIndex == bezierPath.NumSegments - 1);
                     if (isLastPointOnPath)
-                    {
+                        {
                         t = 1;
-                    }
+                        }
                     Vector3 pointOnPath = CubicBezierUtility.EvaluateCurve(segmentPoints, t);
                     Vector3 nextPointOnPath = CubicBezierUtility.EvaluateCurve(segmentPoints, t + increment);
 
@@ -47,40 +48,36 @@ namespace PathCreation.Utility
 
 
                     if ((angleError > maxAngleError && dstSinceLastVertex >= minVertexDst) || isLastPointOnPath)
-                    {
+                        {
 
                         currentPathLength += (lastAddedPoint - pointOnPath).magnitude;
                         splitData.cumulativeLength.Add(currentPathLength);
                         splitData.vertices.Add(pointOnPath);
                         splitData.tangents.Add(CubicBezierUtility.EvaluateCurveDerivative(segmentPoints, t).normalized);
-						splitData.minMax.AddValue(pointOnPath);
+                        splitData.minMax.AddValue(pointOnPath);
                         dstSinceLastVertex = 0;
                         lastAddedPoint = pointOnPath;
-                    }
+                        }
                     else
-                    {
+                        {
                         dstSinceLastVertex += (pointOnPath - prevPointOnPath).magnitude;
-                    }
+                        }
                     prevPointOnPath = pointOnPath;
-                }
+                    }
                 splitData.anchorVertexMap.Add(splitData.vertices.Count - 1);
-                ///////
-                splitData.anchorTangents.Add(CubicBezierUtility.EvaluateCurveDerivative(segmentPoints, 0));
-                splitData.anchorTangents.Add(CubicBezierUtility.EvaluateCurveDerivative(segmentPoints, 1));
-                ///////
                 }
             return splitData;
-		}
+            }
 
-		public static PathSplitData SplitBezierPathEvenly(BezierPath bezierPath, float spacing, float accuracy)
-        {
-			PathSplitData splitData = new PathSplitData();
+        public static PathSplitData SplitBezierPathEvenly(BezierPath bezierPath, float spacing, float accuracy)
+            {
+            PathSplitData splitData = new PathSplitData();
 
             splitData.vertices.Add(bezierPath[0]);
             splitData.tangents.Add(CubicBezierUtility.EvaluateCurveDerivative(bezierPath.GetPointsInSegment(0), 0).normalized);
             splitData.cumulativeLength.Add(0);
             splitData.anchorVertexMap.Add(0);
-			splitData.minMax.AddValue(bezierPath[0]);
+            splitData.minMax.AddValue(bezierPath[0]);
 
             Vector3 prevPointOnPath = bezierPath[0];
             Vector3 lastAddedPoint = bezierPath[0];
@@ -90,54 +87,55 @@ namespace PathCreation.Utility
 
             // Go through all segments and split up into vertices
             for (int segmentIndex = 0; segmentIndex < bezierPath.NumSegments; segmentIndex++)
-            {
+                {
                 Vector3[] segmentPoints = bezierPath.GetPointsInSegment(segmentIndex);
                 float estimatedSegmentLength = CubicBezierUtility.EstimateCurveLength(segmentPoints[0], segmentPoints[1], segmentPoints[2], segmentPoints[3]);
                 int divisions = Mathf.CeilToInt(estimatedSegmentLength * accuracy);
                 float increment = 1f / divisions;
 
                 for (float t = increment; t <= 1; t += increment)
-                {
+                    {
                     bool isLastPointOnPath = (t + increment > 1 && segmentIndex == bezierPath.NumSegments - 1);
                     if (isLastPointOnPath)
-                    {
+                        {
                         t = 1;
-                    }
+                        }
                     Vector3 pointOnPath = CubicBezierUtility.EvaluateCurve(segmentPoints, t);
-					dstSinceLastVertex += (pointOnPath - prevPointOnPath).magnitude;
+                    dstSinceLastVertex += (pointOnPath - prevPointOnPath).magnitude;
 
-					// If vertices are now too far apart, go back by amount we overshot by
-					if (dstSinceLastVertex > spacing) {
-						float overshootDst = dstSinceLastVertex - spacing;
-						pointOnPath += (prevPointOnPath-pointOnPath).normalized * overshootDst;
-						t-=increment;
-					}
+                    // If vertices are now too far apart, go back by amount we overshot by
+                    if (dstSinceLastVertex > spacing)
+                        {
+                        float overshootDst = dstSinceLastVertex - spacing;
+                        pointOnPath += (prevPointOnPath - pointOnPath).normalized * overshootDst;
+                        t -= increment;
+                        }
 
                     if (dstSinceLastVertex >= spacing || isLastPointOnPath)
-                    {
+                        {
                         currentPathLength += (lastAddedPoint - pointOnPath).magnitude;
                         splitData.cumulativeLength.Add(currentPathLength);
                         splitData.vertices.Add(pointOnPath);
                         splitData.tangents.Add(CubicBezierUtility.EvaluateCurveDerivative(segmentPoints, t).normalized);
-						splitData.minMax.AddValue(pointOnPath);
+                        splitData.minMax.AddValue(pointOnPath);
                         dstSinceLastVertex = 0;
                         lastAddedPoint = pointOnPath;
-                    }
+                        }
                     prevPointOnPath = pointOnPath;
-                }
+                    }
                 splitData.anchorVertexMap.Add(splitData.vertices.Count - 1);
                 }
             return splitData;
-		}
+            }
 
-       
-	   public class PathSplitData {
-		   public List<Vector3> vertices = new List<Vector3>();
-		   public List<Vector3> tangents = new List<Vector3>();
-		   public List<float> cumulativeLength = new List<float>();
-		   public List<int> anchorVertexMap = new List<int>();
-		   public MinMax3D minMax = new MinMax3D();
-            public List<Vector3> anchorTangents = new List<Vector3>();
-	   }
+
+        public class PathSplitData
+            {
+            public List<Vector3> vertices = new List<Vector3>();
+            public List<Vector3> tangents = new List<Vector3>();
+            public List<float> cumulativeLength = new List<float>();
+            public List<int> anchorVertexMap = new List<int>();
+            public MinMax3D minMax = new MinMax3D();
+            }
+        }
     }
-}

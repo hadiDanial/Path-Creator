@@ -21,7 +21,6 @@ namespace PathCreation
         public readonly Vector3[] vertices;
         public readonly Vector3[] tangents;
         public readonly Vector3[] normals;
-        public readonly Vector3[] anchorTangents;
 
         /// Percentage along the path at each vertex (0 being start of path, and 1 being the end)
         public readonly float[] times;
@@ -71,7 +70,7 @@ namespace PathCreation
             cumulativeLengthAtEachVertex = new float[numVerts];
             times = new float[numVerts];
             bounds = new Bounds((pathSplitData.minMax.Min + pathSplitData.minMax.Max) / 2, pathSplitData.minMax.Max - pathSplitData.minMax.Min);
-            anchorTangents = pathSplitData.anchorTangents.ToArray();
+
             // Figure out up direction for path
             up = (bounds.size.z > bounds.size.y) ? Vector3.up : -Vector3.forward;
             Vector3 lastRotationAxis = up;
@@ -233,55 +232,25 @@ namespace PathCreation
             return Quaternion.LookRotation(direction, normal);
             }
 
-
-        /// <summary>
-        /// Finds the index of the nearest vertex on the path to a Vector3 position.
-        /// </summary>
-        /// <param name="position"></param>
-        /// <returns>Index of nearest vertex to position</returns>
-        public int GetNearestVertex(Vector3 position)
+        /// Finds the closest point on the path from any point in the world
+        public Vector3 GetClosestPointOnPath(Vector3 worldPoint)
             {
-            Vector3 v = vertices[0];
-            int index = 0;
-            for (int i = 0; i < vertices.Length; i++)
-                {
-                if (Vector3.Distance(position, vertices[i]) < Vector3.Distance(position, v))
-                    {
-                    v = vertices[i];
-                    index = i;
-                    }
-                }
-            return index;
+            TimeOnPathData data = CalculateClosestPointOnPathData(worldPoint);
+            return Vector3.Lerp(vertices[data.previousIndex], vertices[data.nextIndex], data.percentBetweenIndices);
             }
 
-        /// <summary>
-        /// Returns the position of the nearest vertex
-        /// </summary>
-        public Vector3 GetNearestVertexPosition(Vector3 position)
+        /// Finds the 'time' (0=start of path, 1=end of path) along the path that is closest to the given point
+        public float GetClosestTimeOnPath(Vector3 worldPoint)
             {
-            return vertices[GetNearestVertex(position)];
+            TimeOnPathData data = CalculateClosestPointOnPathData(worldPoint);
+            return Mathf.Lerp(times[data.previousIndex], times[data.nextIndex], data.percentBetweenIndices);
             }
 
-        /// <summary>
-        /// Gets the percentage of the closest path vertex to a position.
-        /// </summary>
-        /// <param name="position">The position to check.</param>
-        /// <returns>Percentage</returns>
-        public float CalculatePercentByPosition(Vector3 position)
+        /// Finds the distance along the path that is closest to the given point
+        public float GetClosestDistanceAlongPath(Vector3 worldPoint)
             {
-            int index = GetNearestVertex(position);
-            return times[index];
-            }
-
-        /// Gets forward direction on path by index.
-        public Vector3 GetDirection(int index, EndOfPathInstruction endOfPathInstruction = EndOfPathInstruction.Loop)
-            {
-            return tangents[index];
-            }
-
-        public float GetUniformSpeed(float speed)
-            {
-            return (1 / length) * speed;
+            TimeOnPathData data = CalculateClosestPointOnPathData(worldPoint);
+            return Mathf.Lerp(cumulativeLengthAtEachVertex[data.previousIndex], cumulativeLengthAtEachVertex[data.nextIndex], data.percentBetweenIndices);
             }
 
         #endregion
@@ -342,7 +311,46 @@ namespace PathCreation
             return new TimeOnPathData(prevIndex, nextIndex, abPercent);
             }
 
-        struct TimeOnPathData
+        /// Calculate time data for closest point on the path from given world point
+        TimeOnPathData CalculateClosestPointOnPathData(Vector3 worldPoint)
+            {
+            float minSqrDst = float.MaxValue;
+            Vector3 closestPoint = Vector3.zero;
+            int closestSegmentIndexA = 0;
+            int closestSegmentIndexB = 0;
+
+            for (int i = 0; i < vertices.Length; i++)
+                {
+                int nextI = i + 1;
+                if (nextI >= vertices.Length)
+                    {
+                    if (isClosedLoop)
+                        {
+                        nextI %= vertices.Length;
+                        }
+                    else
+                        {
+                        break;
+                        }
+                    }
+
+                Vector3 closestPointOnSegment = MathUtility.ClosestPointOnLineSegment(worldPoint, vertices[i], vertices[nextI]);
+                float sqrDst = (worldPoint - closestPointOnSegment).sqrMagnitude;
+                if (sqrDst < minSqrDst)
+                    {
+                    minSqrDst = sqrDst;
+                    closestPoint = closestPointOnSegment;
+                    closestSegmentIndexA = i;
+                    closestSegmentIndexB = nextI;
+                    }
+
+                }
+            float closestSegmentLength = (vertices[closestSegmentIndexA] - vertices[closestSegmentIndexB]).magnitude;
+            float t = (closestPoint - vertices[closestSegmentIndexA]).magnitude / closestSegmentLength;
+            return new TimeOnPathData(closestSegmentIndexA, closestSegmentIndexB, t);
+            }
+
+        public struct TimeOnPathData
             {
             public readonly int previousIndex;
             public readonly int nextIndex;
