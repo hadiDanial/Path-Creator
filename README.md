@@ -6,11 +6,12 @@ Additions to the main repo:
 
 Path generators, with custom inspectors
 
+[Path to sprite shape conversion](https://github.com/hadiDanial/Path-Creator/tree/PathToSpriteShape)
+
 ![Polygon Generator](https://i.imgur.com/HDyuaek.png)
 
 ![Spiral & Random](https://i.imgur.com/lRbJHpn.png)
 
-[Path to sprite shape conversion] (https://github.com/hadiDanial/Path-Creator/tree/PathToSpriteShape)
 
 
 -----------------------------------------------------------
