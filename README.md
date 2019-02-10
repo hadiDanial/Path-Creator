@@ -10,7 +10,7 @@ Path generators, with custom inspectors
 
 ![Spiral & Random](https://i.imgur.com/lRbJHpn.png)
 
-Path to sprite shape conversion (will be readded soon)
+[Path to sprite shape conversion] (https://github.com/hadiDanial/Path-Creator/tree/PathToSpriteShape)
 
 
 -----------------------------------------------------------
