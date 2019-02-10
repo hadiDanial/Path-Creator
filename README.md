@@ -6,7 +6,7 @@ Additions to the main repo:
 
 Path generators, with custom inspectors
 
-Path to sprite shape conversion (will be readded soon)
+![Path to sprite shape conversion](https://i.imgur.com/1HkGZ1V.gifv)
 
 
 [Watch overview video](https://www.youtube.com/watch?v=saAQNRSYU9k)
