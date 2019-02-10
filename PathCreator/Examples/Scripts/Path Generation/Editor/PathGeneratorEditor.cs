@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(PathGenerator),true)]
+[CustomEditor(typeof(PathGenerator),true), CanEditMultipleObjects]
 public class PathGeneratorEditor : Editor
 {
 
@@ -155,7 +155,7 @@ public class PathGeneratorEditor : Editor
             }
         }
 
-    private void GenerationButtons()
+    protected virtual void GenerationButtons()
         {
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Generate point(s)"))

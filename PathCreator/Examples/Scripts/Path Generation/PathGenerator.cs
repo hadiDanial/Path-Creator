@@ -41,6 +41,7 @@ public abstract class PathGenerator : MonoBehaviour
     public int numPointsToGenerateT = 4;
 
     //[Header("Collider")]
+    [Tooltip("If on, adds a PathCollider component.")]
     public bool generate2DCollider = false;
     public PhysicsMaterial2D physicsMaterial2D;
     private PathCollider pathCollider;
@@ -54,6 +55,7 @@ public abstract class PathGenerator : MonoBehaviour
     protected Vector3 lastPoint;
     protected int sign = 1;
     protected PathSpace space;
+    [HideInInspector]
     public bool hasBeenInitialized = false;
     protected virtual void Start()
         {

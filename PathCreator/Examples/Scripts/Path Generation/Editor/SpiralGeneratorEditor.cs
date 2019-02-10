@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(SpiralGenerator), true)]
+[CustomEditor(typeof(SpiralGenerator), true), CanEditMultipleObjects]
 public class SpiralGeneratorEditor : PathGeneratorEditor
     {
     public static bool spiralGenerationFoldOut = false;
@@ -49,7 +49,7 @@ public class SpiralGeneratorEditor : PathGeneratorEditor
         settingsFoldOut = EditorGUILayout.Foldout(settingsFoldOut, "Settings", true, headerStyle);
         if (settingsFoldOut && showSettings)
             {
-            EditorGUILayout.PropertyField(generateMultiplePoints);
+            EditorGUILayout.PropertyField(generateMultiplePoints, new GUIContent("Generate Multiple Cycles"));
             EditorGUILayout.PropertyField(pointsToAdd, new GUIContent("Number of Points to Add"));
             EditorGUILayout.PropertyField(startPointsNum);
             EditorGUILayout.PropertyField(startPoints, true);

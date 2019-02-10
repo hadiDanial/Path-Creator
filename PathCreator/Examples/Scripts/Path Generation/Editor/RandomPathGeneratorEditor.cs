@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(RandomPathGenerator), true)]
+[CustomEditor(typeof(RandomPathGenerator), true), CanEditMultipleObjects]
 public class RandomPathGeneratorEditor : PathGeneratorEditor
     {
     public static bool randomGenerationFoldOut = false;
