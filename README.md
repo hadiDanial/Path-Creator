@@ -6,6 +6,8 @@ Additions to the main repo:
 
 Path generators, with custom inspectors
 
+![Polygon Generator](https://imgur.com/HDyuaek)
+
 Path to sprite shape conversion (will be readded soon)
 
 
