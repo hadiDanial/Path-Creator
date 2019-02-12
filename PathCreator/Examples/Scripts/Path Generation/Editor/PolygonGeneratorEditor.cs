@@ -11,9 +11,18 @@ public class PolygonGeneratorEditor : PathGeneratorEditor
     protected SerializedProperty sharpCorners = null;
     protected SerializedProperty autoControlLength = null;
     protected SerializedProperty inset = null;
+    protected SerializedProperty insetEveryNthPoint = null;
+    protected SerializedProperty divideEdges = null;
+    protected SerializedProperty divisionsPerEdge = null;
     protected SerializedProperty insetPercent = null;
     protected SerializedProperty originPoint = null;
     protected SerializedProperty axis = null;
+    public PolygonGenerator polyGenerator;
+    protected override void OnEnable()
+        {
+        polyGenerator = (PolygonGenerator)target;
+        InitializeVariables();
+        } 
 
     protected override void InitializeVariables()
         {
@@ -24,6 +33,9 @@ public class PolygonGeneratorEditor : PathGeneratorEditor
         sharpCorners = serializedObject.FindProperty("sharpCorners");
         autoControlLength = serializedObject.FindProperty("autoControlLength");
         inset = serializedObject.FindProperty("inset");
+        insetEveryNthPoint = serializedObject.FindProperty("insetEveryNthPoint");
+        divideEdges = serializedObject.FindProperty("divideEdges");
+        divisionsPerEdge = serializedObject.FindProperty("divisionsPerEdge");
         insetPercent = serializedObject.FindProperty("insetPercent");
         originPoint = serializedObject.FindProperty("originPoint");
         axis = serializedObject.FindProperty("axis");
@@ -63,8 +75,21 @@ public class PolygonGeneratorEditor : PathGeneratorEditor
             DrawUILine();
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(inset);
-            EditorGUILayout.PropertyField(insetPercent);
+            EditorGUILayout.PropertyField(divideEdges);
             EditorGUILayout.EndHorizontal();
+            DrawUILine();
+            if (polyGenerator.inset)
+                {
+                EditorGUILayout.PropertyField(insetPercent);
+                polyGenerator.insetEveryNthPoint = EditorGUILayout.IntSlider(new GUIContent("Inset Every n-th point"), polyGenerator.insetEveryNthPoint, 1, polyGenerator.GetNumPoints());
+                DrawUILine();
+                }
+            if (polyGenerator.divideEdges)
+                {
+                polyGenerator.divisionsPerEdge = EditorGUILayout.IntSlider(new GUIContent("Divisions per edge"), polyGenerator.divisionsPerEdge, 1, 20);
+                DrawUILine();
+                }
+            //EditorGUILayout.PropertyField(divisionsPerEdge);
             EditorGUILayout.PropertyField(originPoint);
             EditorGUILayout.PropertyField(axis);
             }
@@ -76,15 +101,15 @@ public class PolygonGeneratorEditor : PathGeneratorEditor
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("Generate polygon"))
             {
-            if (!generator.hasBeenInitialized)
+            if (!polyGenerator.hasBeenInitialized)
                 {
-                generator.InitializeGenerator();
+                polyGenerator.InitializeGenerator();
                 }
-            generator.GeneratePoint();
+            polyGenerator.GeneratePoint();
             }
         if (GUILayout.Button("RESET PATH"))
             {
-            generator.Clear();
+            polyGenerator.Clear();
             }
         GUILayout.EndVertical();
         }
