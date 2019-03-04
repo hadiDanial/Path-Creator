@@ -6,9 +6,18 @@ Additions to the main repo:
 
 [Path to sprite shape conversion (gif)](https://i.imgur.com/1HkGZ1V.gifv)
 
-Path generators, with custom inspectors (master branch)
+PathToSpriteShape
 
--------------------------------------------
+Path generators, with custom inspectors
+
+![Polygon Generator](https://i.imgur.com/HDyuaek.png)
+
+![Spiral & Random](https://i.imgur.com/lRbJHpn.png)
+
+
+
+-----------------------------------------------------------
+master
 
 [Watch overview video](https://www.youtube.com/watch?v=saAQNRSYU9k)
 
