@@ -50,10 +50,6 @@ public class PolygonGeneratorEditor : PathGeneratorEditor
             DrawUILine();
             ShowPolygonGenerationSettings(headerStyle);
             DrawUILine();
-            ShowLimits(headerStyle);
-            DrawUILine();
-            ShowTime(headerStyle);
-            DrawUILine();
             ShowCollider(headerStyle);
             }
         GUILayout.EndVertical();
