@@ -4,9 +4,11 @@ This fork started with me trying to use this asset in a game project, and ended 
 
 Additions to the main repo:
 
-Path generators, with custom inspectors
+[Path to sprite shape conversion (gif)](https://i.imgur.com/1HkGZ1V.gifv)
 
-[Path to sprite shape conversion](https://github.com/hadiDanial/Path-Creator/tree/PathToSpriteShape)
+PathToSpriteShape
+
+Path generators, with custom inspectors
 
 ![Polygon Generator](https://i.imgur.com/HDyuaek.png)
 
@@ -15,6 +17,7 @@ Path generators, with custom inspectors
 
 
 -----------------------------------------------------------
+master
 
 [Watch overview video](https://www.youtube.com/watch?v=saAQNRSYU9k)
 
